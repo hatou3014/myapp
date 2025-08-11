@@ -1,13 +1,22 @@
 "use client";
+
+type Health = {
+  ok: boolean;
+  time: string;
+};
+
 import { useEffect, useState } from "react";
 
 import Image from "next/image";
 
 export default function Page() {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<Health | null>(null); // ← anyをやめる
 
   useEffect(() => {
-    fetch("/api/health").then(r => r.json()).then(setHealth);
+    fetch("/api/health")
+    .then((r) => r.json() as Promise<Health>)
+    .then(setHealth)
+    .catch(console.error);
   }, []);
 
   return (
