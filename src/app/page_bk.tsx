@@ -1,23 +1,9 @@
-"use client";
-import { useEffect, useState } from "react";
-
 import Image from "next/image";
 
-export default function Page() {
-  const [health, setHealth] = useState<any>(null);
-
-  useEffect(() => {
-    fetch("/api/health").then(r => r.json()).then(setHealth);
-  }, []);
-
+export default function Home() {
   return (
-
-
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-              <h1>ようこそ！</h1>
-      <p>下は /api/health から取得したJSONです：</p>
-      <pre>{JSON.stringify(health, null, 2)}</pre>
         <Image
           className="dark:invert"
           src="/next.svg"
