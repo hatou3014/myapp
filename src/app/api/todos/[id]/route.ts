@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type Ctx = { params: { id: string } };
-
-export async function PATCH(_: Request, { params }: Ctx) {
+export async function PATCH(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
   const updated = await prisma.todo.update({
     where: { id: params.id },
     data: { done: true },
@@ -11,7 +12,10 @@ export async function PATCH(_: Request, { params }: Ctx) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_: Request, { params }: Ctx) {
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
   await prisma.todo.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
 }
