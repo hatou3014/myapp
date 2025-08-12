@@ -1,13 +1,16 @@
 "use client";
 
+import { useEffect, useState, FormEvent } from "react";
+import Image from "next/image";
+
+
 type Health = {
   ok: boolean;
   time: string;
 };
 
-import { useEffect, useState } from "react";
+type Todo = { id: string; title: string; done: boolean; createdAt: string };
 
-import Image from "next/image";
 
 export default function Page() {
   const [health, setHealth] = useState<Health | null>(null); // ← anyをやめる
@@ -19,12 +22,60 @@ export default function Page() {
     .catch(console.error);
   }, []);
 
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [title, setTitle] = useState("");
+
+  async function load() {
+    const res = await fetch("/api/todos", { cache: "no-store" });
+    setTodos(await res.json());
+  }
+  useEffect(() => { load(); }, []);
+
+  async function add(e: FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    await fetch("/api/todos", {
+      method: "POST",
+      body: JSON.stringify({ title }),
+    });
+    setTitle("");
+    load();
+  }
+  async function done(id: string) {
+    await fetch(`/api/todos/${id}`, { method: "PATCH" });
+    load();
+  }
+  async function remove(id: string) {
+    await fetch(`/api/todos/${id}`, { method: "DELETE" });
+    load();
+  }
+
   return (
 
 
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-              <h1>ようこそ！</h1>
+      <h1>Todos</h1>
+      <form onSubmit={add} style={{ display: "flex", gap: 8 }}>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="new todo..."
+          style={{ flex: 1, padding: 8 }}
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      <ul style={{ marginTop: 24 }}>
+        {todos.map((t) => (
+          <li key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+            <span style={{ textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
+            {!t.done && <button onClick={() => done(t.id)}>Done</button>}
+            <button onClick={() => remove(t.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+      <h1>ようこそ！</h1>
       <p>下は /api/health から取得したJSONです：</p>
       <pre>{JSON.stringify(health, null, 2)}</pre>
         <Image
