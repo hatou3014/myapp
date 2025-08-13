@@ -2,6 +2,8 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Image from "next/image";
+import { useSession, signIn, signOut } from "next-auth/react";
+
 
 
 type Health = {
@@ -14,6 +16,7 @@ type Todo = { id: string; title: string; done: boolean; createdAt: string };
 
 export default function Page() {
   const [health, setHealth] = useState<Health | null>(null); // ← anyをやめる
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     fetch("/api/health")
@@ -55,6 +58,20 @@ export default function Page() {
 
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+       
+       
+       <h1>Welcome</h1>
+      {status === "loading" && <p>Loading session...</p>}
+      {session ? (
+        <>
+          <p>Signed in as {session.user?.email ?? session.user?.name}</p>
+          <button onClick={() => signOut()}>Sign out</button>
+        </>
+      ) : (
+        <button onClick={() => signIn("github")}>Sign in with GitHub</button>
+      )}
+
+
       <h1>Todos</h1>
       <form onSubmit={add} style={{ display: "flex", gap: 8 }}>
         <input
@@ -75,6 +92,8 @@ export default function Page() {
           </li>
         ))}
       </ul>
+
+
       <h1>ようこそ！</h1>
       <p>下は /api/health から取得したJSONです：</p>
       <pre>{JSON.stringify(health, null, 2)}</pre>
@@ -86,6 +105,8 @@ export default function Page() {
           height={38}
           priority
         />
+
+        
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-center sm:text-left">
           こんにちは。
         </h1>
