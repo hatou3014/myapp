@@ -12,6 +12,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: { strategy: "database" }, // DBベースのセッション
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true
+  secret: process.env.NEXTAUTH_SECRET
 });
