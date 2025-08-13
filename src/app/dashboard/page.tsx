@@ -1,7 +1,9 @@
+// src/app/dashboard/page.tsx
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // これは残してOK
+export const dynamic = "force-dynamic"; // ←これを追加！
 
 export default async function Dashboard() {
   const session = await auth();
