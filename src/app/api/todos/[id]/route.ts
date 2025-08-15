@@ -8,9 +8,9 @@ import { prisma } from "@/lib/prisma";
 // PATCH /api/todos/:id
 export async function PATCH(
   req: Request,
-  context: any // ← 型注釈を外す（または any）
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await (context as { params: Promise<{ id: string }> }).params;
+  const { id } = await context.params;
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -53,9 +53,9 @@ export async function PATCH(
 // DELETE /api/todos/:id
 export async function DELETE(
   _req: Request,
-  context: any // ← 型注釈を外す（または any）
+  context: { params: Promise<{ id: string }> }
 ) {
- const { id } = await (context as { params: Promise<{ id: string }> }).params;
+  const { id } = await context.params;
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
