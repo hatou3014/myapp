@@ -1,13 +1,13 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
-import { PrismaAdapter } from "@auth/prisma-adapter"; // v4でもOK
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-// ★ これを named export にする（超重要）
+// ✅ これだけで named export 完了（この下で二度目の export は不要）
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -22,8 +22,5 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-// API ルートのハンドラ
+// APIハンドラのエクスポートだけ残す
 export { handler as GET, handler as POST };
-
-// ★ authOptions もそのまま named export
-export { authOptions };
