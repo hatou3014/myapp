@@ -5,12 +5,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
+// 動的ルート [id] 用の型
+type Params = { id: string };
+
 // PATCH /api/todos/:id
 export async function PATCH(
   req: Request,
-  context: { params: Record<string, string> } // ← ここ
+  { params }: { params: Params }
 ) {
-  const { params } = context;                // ← ここで取り出す
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -52,9 +54,8 @@ export async function PATCH(
 // DELETE /api/todos/:id
 export async function DELETE(
   _req: Request,
-  context: { params: Record<string, string> } // ← ここ
+  { params }: { params: Params }
 ) {
-  const { params } = context;                // ← ここで取り出す
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
