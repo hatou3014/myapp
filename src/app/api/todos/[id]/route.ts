@@ -1,15 +1,17 @@
 export const runtime = "nodejs";
 
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
 // PATCH /api/todos/:id
 export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } } // ← エイリアスを使わずインラインで
+  req: Request,
+  context: any // ← 型注釈を外す（または any）
 ) {
+  const { id } = await (context as { params: Promise<{ id: string }> }).params;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,7 +35,7 @@ export async function PATCH(
   }
 
   const result = await prisma.todo.updateMany({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
     data,
   });
 
@@ -42,7 +44,7 @@ export async function PATCH(
   }
 
   const updated = await prisma.todo.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
   });
 
   return NextResponse.json(updated);
@@ -50,16 +52,18 @@ export async function PATCH(
 
 // DELETE /api/todos/:id
 export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } } // ← ここもインラインで
+  _req: Request,
+  context: any // ← 型注釈を外す（または any）
 ) {
+ const { id } = await (context as { params: Promise<{ id: string }> }).params;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const result = await prisma.todo.deleteMany({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
   });
 
   if (result.count === 0) {
