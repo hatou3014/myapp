@@ -46,7 +46,6 @@ export default function Page() {
   // 認証状態が変わったら再読み込み
   useEffect(() => {
     if (status !== "loading") load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   async function add(e: FormEvent) {
