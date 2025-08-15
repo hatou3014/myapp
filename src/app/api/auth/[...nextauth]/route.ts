@@ -1,28 +1,29 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
-import GitHub from "next-auth/providers/github";
-// v4でも @auth/prisma-adapter で動きます。型で怒られる場合は下の注記を参照
-import { PrismaAdapter } from "@auth/prisma-adapter";
-// もし型で怒られたら：
-// import { PrismaAdapter } from "@next-auth/prisma-adapter";
-
+import GitHubProvider from "next-auth/providers/github";
+import { PrismaAdapter } from "@auth/prisma-adapter"; // v4でもOK
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-const authOptions: NextAuthOptions = {
+// ★ これを named export にする（超重要）
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    GitHub({
+    GitHubProvider({
       clientId: process.env.GITHUB_ID!,
       clientSecret: process.env.GITHUB_SECRET!,
     }),
   ],
   session: { strategy: "database" },
   secret: process.env.NEXTAUTH_SECRET,
-  // v4には trustHost はありません
 };
 
 const handler = NextAuth(authOptions);
+
+// API ルートのハンドラ
 export { handler as GET, handler as POST };
+
+// ★ authOptions もそのまま named export
+export { authOptions };
