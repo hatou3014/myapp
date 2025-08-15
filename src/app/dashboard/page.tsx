@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // ← これでOK
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
+import SignOutButton from "@/components/SignOutButton"; // ← 追加
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,9 +15,7 @@ export default async function Dashboard() {
     <main className="p-6 max-w-3xl mx-auto space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <a className="px-4 py-2 rounded-xl border shadow-sm" href="/api/auth/signout">
-          Sign out
-        </a>
+        <SignOutButton /> {/* ← 差し替え */}
       </header>
 
       <p>ようこそ、{session.user?.name ?? session.user?.email} さん</p>
