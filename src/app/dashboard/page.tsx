@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options"; // ← ここを変更
 import { redirect } from "next/navigation";
-import SignOutButton from "@/components/SignOutButton"; // ← 追加
+import SignOutButton from "@/components/SignOutButton";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function Dashboard() {
     <main className="p-6 max-w-3xl mx-auto space-y-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <SignOutButton /> {/* ← 差し替え */}
+        <SignOutButton />
       </header>
 
       <p>ようこそ、{session.user?.name ?? session.user?.email} さん</p>
