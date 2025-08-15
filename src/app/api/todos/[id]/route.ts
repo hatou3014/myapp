@@ -1,16 +1,16 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
 // PATCH /api/todos/:id
 export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } } // ← 型をインラインで書く
+  req: Request,
+  context: { params: Record<string, string> } // ← ここ
 ) {
+  const { params } = context;                // ← ここで取り出す
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -51,9 +51,10 @@ export async function PATCH(
 
 // DELETE /api/todos/:id
 export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } } // ← これもインライン
+  _req: Request,
+  context: { params: Record<string, string> } // ← ここ
 ) {
+  const { params } = context;                // ← ここで取り出す
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
