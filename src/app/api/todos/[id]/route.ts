@@ -1,17 +1,14 @@
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
-// 動的ルート [id] 用の型
-type Params = { id: string };
-
 // PATCH /api/todos/:id
 export async function PATCH(
-  req: Request,
-  { params }: { params: Params }
+  req: NextRequest,
+  { params }: { params: { id: string } } // ← エイリアスを使わずインラインで
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -53,8 +50,8 @@ export async function PATCH(
 
 // DELETE /api/todos/:id
 export async function DELETE(
-  _req: Request,
-  { params }: { params: Params }
+  _req: NextRequest,
+  { params }: { params: { id: string } } // ← ここもインラインで
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
