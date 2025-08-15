@@ -1,23 +1,23 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
-type Ctx = { params: { id: string } };
-
 // PATCH /api/todos/:id
-export async function PATCH(req: Request, { params }: Ctx) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } } // ← 型をインラインで書く
+) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 入力の受け口は unknown とし、自分で狭める
   const body = (await req.json().catch(() => ({}))) as unknown;
 
-  // 更新可能フィールドだけを許可
   type TodoUpdate = { done?: boolean; title?: string };
   const data: TodoUpdate = {};
 
@@ -33,7 +33,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ error: "no valid fields" }, { status: 400 });
   }
 
-  // 重要：所有者縛りで updateMany
   const result = await prisma.todo.updateMany({
     where: { id: params.id, userId: session.user.id },
     data,
@@ -43,7 +42,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // 更新後の値が必要なら再取得
   const updated = await prisma.todo.findFirst({
     where: { id: params.id, userId: session.user.id },
   });
@@ -52,7 +50,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
 }
 
 // DELETE /api/todos/:id
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } } // ← これもインライン
+) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
