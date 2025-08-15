@@ -4,94 +4,127 @@ import { useEffect, useState, FormEvent } from "react";
 import Image from "next/image";
 import { useSession, signIn, signOut } from "next-auth/react";
 
-
-
-type Health = {
-  ok: boolean;
-  time: string;
-};
-
+type Health = { ok: boolean; time: string };
 type Todo = { id: string; title: string; done: boolean; createdAt: string };
 
-
 export default function Page() {
-  const [health, setHealth] = useState<Health | null>(null); // ← anyをやめる
+  const [health, setHealth] = useState<Health | null>(null);
   const { data: session, status } = useSession();
 
   useEffect(() => {
     fetch("/api/health")
-    .then((r) => r.json() as Promise<Health>)
-    .then(setHealth)
-    .catch(console.error);
+      .then((r) => r.json() as Promise<Health>)
+      .then(setHealth)
+      .catch(console.error);
   }, []);
 
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
+    setError(null);
     const res = await fetch("/api/todos", { cache: "no-store" });
-    setTodos(await res.json());
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        // 未ログイン
+        setTodos([]);
+        setError("ログインが必要です。");
+      } else {
+        setError(`取得に失敗しました（${res.status}）`);
+      }
+      return;
+    }
+
+    // 配列 or { todos: 配列 } 両対応（どちらでも落ちないように）
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : data?.todos;
+    setTodos(Array.isArray(list) ? list : []);
   }
-  useEffect(() => { load(); }, []);
+
+  // 認証状態が変わったら再読み込み
+  useEffect(() => {
+    if (status !== "loading") load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   async function add(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    await fetch("/api/todos", {
+
+    const res = await fetch("/api/todos", {
       method: "POST",
-      body: JSON.stringify({ title }),
+      headers: { "Content-Type": "application/json" }, // 重要
+      body: JSON.stringify({ title: title.trim() }),
     });
+
+    if (!res.ok) {
+      setError(res.status === 401 ? "ログインが必要です。" : `追加に失敗しました（${res.status}）`);
+      return;
+    }
+
     setTitle("");
     load();
   }
+
   async function done(id: string) {
-    await fetch(`/api/todos/${id}`, { method: "PATCH" });
+    const res = await fetch(`/api/todos/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" }, // 重要
+      body: JSON.stringify({ done: true }),            // サーバ側に明示
+    });
+    if (!res.ok) {
+      setError(res.status === 401 ? "ログインが必要です。" : `更新に失敗しました（${res.status}）`);
+      return;
+    }
     load();
   }
+
   async function remove(id: string) {
-    await fetch(`/api/todos/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/todos/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setError(res.status === 401 ? "ログインが必要です。" : `削除に失敗しました（${res.status}）`);
+      return;
+    }
     load();
   }
-
   return (
-
-
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-       
-       
-       <h1>Welcome</h1>
-      {status === "loading" && <p>Loading session...</p>}
-      {session ? (
-        <>
-          <p>Signed in as {session.user?.email ?? session.user?.name}</p>
-          <button onClick={() => signOut()}>Sign out</button>
-        </>
-      ) : (
-        <button onClick={() => signIn("github")}>Sign in with GitHub</button>
-      )}
+        <h1>Welcome</h1>
+        {status === "loading" && <p>Loading session...</p>}
+        {session ? (
+          <>
+            <p>Signed in as {session.user?.email ?? session.user?.name}</p>
+            <button onClick={() => signOut()}>Sign out</button>
+          </>
+        ) : (
+          <button onClick={() => signIn("github")}>Sign in with GitHub</button>
+        )}
 
+        <h1>Todos</h1>
+        <form onSubmit={add} style={{ display: "flex", gap: 8 }}>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="new todo..."
+            style={{ flex: 1, padding: 8 }}
+          />
+          <button type="submit">Add</button>
+        </form>
 
-      <h1>Todos</h1>
-      <form onSubmit={add} style={{ display: "flex", gap: 8 }}>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="new todo..."
-          style={{ flex: 1, padding: 8 }}
-        />
-        <button type="submit">Add</button>
-      </form>
+        {error && <p style={{ color: "crimson" }}>{error}</p>}
 
-      <ul style={{ marginTop: 24 }}>
-        {todos.map((t) => (
-          <li key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <span style={{ textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
-            {!t.done && <button onClick={() => done(t.id)}>Done</button>}
-            <button onClick={() => remove(t.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+        <ul style={{ marginTop: 24 }}>
+          {todos.map((t) => (
+            <li key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+              <span style={{ textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
+              {!t.done && <button onClick={() => done(t.id)}>Done</button>}
+              <button onClick={() => remove(t.id)}>Delete</button>
+            </li>
+          ))}
+        </ul>
 
 
       <h1>ようこそ！</h1>

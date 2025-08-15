@@ -66,10 +66,9 @@ model Todo {
   id        String   @id @default(cuid())
   title     String
   done      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-
-  // ユーザー所有にしたい場合に使用（今は任意）
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-
+  updatedAt DateTime @default(now()) @updatedAt
+  @@index([userId])
 }
